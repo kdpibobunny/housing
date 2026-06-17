@@ -44,7 +44,9 @@
   .entry-card.selected{border-color:var(--copper);box-shadow:0 0 0 2px var(--copper-soft);}
   .entry-head{display:flex;align-items:center;gap:10px;padding:11px 12px;cursor:pointer;}
   .badge{font-family:var(--font-display);font-weight:700;width:26px;height:26px;border-radius:50%;background:var(--copper);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
-  .entry-name{font-weight:600;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .entry-name-wrap{display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+  .entry-name{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .visited-tag{font-size:10px;padding:2px 7px;border-radius:999px;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;white-space:nowrap;flex-shrink:0;}
   .type-tag{font-size:11px;padding:2px 9px;border-radius:999px;flex-shrink:0;}
   .type-tag.whole{background:var(--jade-soft);color:var(--jade);}
   .type-tag.shared{background:var(--brick-soft);color:var(--brick);}
@@ -52,7 +54,17 @@
   .entry-fee{font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);flex-shrink:0;text-align:right;}
   .entry-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
   .entry-body{padding:0 12px 14px 48px;font-size:13px;color:var(--ink-soft);}
-  .entry-photo{width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px;background:var(--paper-dim);display:block;}
+  .photo-grid{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .photo-thumb{width:80px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--line-grey);transition:opacity .15s;}
+  .photo-thumb:hover{opacity:0.8;}
+  /* Lightbox */
+  .lb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+  .lb-overlay.open{display:flex;}
+  .lb-img{max-width:92vw;max-height:80vh;border-radius:10px;object-fit:contain;box-shadow:0 4px 32px rgba(0,0,0,0.5);}
+  .lb-close{position:absolute;top:18px;right:24px;font-size:28px;color:#fff;cursor:pointer;line-height:1;background:none;border:none;}
+  .lb-nav{display:flex;gap:16px;}
+  .lb-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:6px;padding:6px 18px;font-size:14px;cursor:pointer;}
+  .lb-btn:hover{background:rgba(255,255,255,0.28);}
   .entry-row{display:flex;gap:8px;margin:4px 0;}
   .entry-row .label{width:54px;flex-shrink:0;color:var(--ink-soft);}
   .entry-row a{color:var(--copper);}
@@ -101,10 +113,21 @@
   </main>
   <footer class="stats-bar"><span id="statsText">共 0 套 · 均价 ¥0</span></footer>
 </div>
+
+<!-- 灯箱 -->
+<div class="lb-overlay" id="lbOverlay">
+  <button class="lb-close" id="lbClose">✕</button>
+  <img class="lb-img" id="lbImg" src="" alt=""/>
+  <div class="lb-nav">
+    <button class="lb-btn" id="lbPrev">◀ 上一张</button>
+    <button class="lb-btn" id="lbNext">下一张 ▶</button>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
-  var listings = [{"id": "l-2", "fileNo": 1, "name": "罗秀二村38.34", "subarea": "罗秀", "x": 77, "y": 66, "price": 3570.0, "type": "整租", "area": 38, "metro": "距罗秀路1公里", "platform": "贝壳", "contact": "贝壳App", "fee": "280", "rating": 4, "note": "一楼朝南，有阳台，开放式厨房，省心租280服务费，装修新", "photoUrl": "", "link": "https://sh.zu.ke.com/zufang/SH2049107063983833088.html"}, {"id": "l-3", "fileNo": 2, "name": "梅陇九村44.82", "subarea": "梅陇", "x": 16, "y": 62, "price": 3750.0, "type": "整租", "area": 44, "metro": "距罗秀路锦江乐园1.5公里", "platform": "贝壳", "contact": "贝壳App", "fee": "300", "rating": 4, "note": "6楼步梯，朝南，自如装修，服务费300，", "photoUrl": "", "link": "https://sh.zu.ke.com/zufang/SH1900883529546334208.html"}, {"id": "l-4", "fileNo": 3, "name": "罗秀二村40.36", "subarea": "罗秀", "x": 72, "y": 65, "price": 3500.0, "type": "整租", "area": 40, "metro": "距罗秀路1公里", "platform": "贝壳", "contact": "贝壳App", "fee": "无", "rating": 4, "note": "中楼层步梯朝南，普通装修，有点像Studio，无服务费", "photoUrl": "", "link": "https://sh.zu.ke.com/zufang/SH2150516767317819392.html"}];
+  var listings = [{"id": "l-2", "fileNo": 1, "name": "罗秀二村38.34", "subarea": "罗秀", "x": 77, "y": 66, "price": 3570.0, "type": "整租", "area": 38, "metro": "距罗秀路1公里", "platform": "贝壳", "contact": "贝壳App", "fee": "285", "rating": 4, "note": "一楼朝南，有阳台，开放式厨房，省心租280服务费，装修新", "photos": [], "visited": false, "link": "https://sh.zu.ke.com/zufang/SH2049107063983833088.html"}, {"id": "l-3", "fileNo": 2, "name": "梅陇九村44.82", "subarea": "梅陇", "x": 16, "y": 62, "price": 3750.0, "type": "整租", "area": 44, "metro": "距罗秀路锦江乐园1.5公里", "platform": "贝壳", "contact": "贝壳App", "fee": "300", "rating": 4, "note": "6楼步梯，朝南，自如装修，服务费300，", "photos": ["https://drive.google.com/uc?export=view&id=1NdIdMHTNShTA1zLxWmS3b3hGz7NDIgsf", "https://drive.google.com/uc?export=view&id=1qMH5C9ZTh2qaBpmTjX1njBlB-IZnGtdC", "https://drive.google.com/uc?export=view&id=1m3kVbCVNstZXO5oWADQ60dcwoSgBAbn5"], "visited": false, "link": "https://sh.zu.ke.com/zufang/SH1900883529546334208.html"}, {"id": "l-4", "fileNo": 3, "name": "罗秀二村40.36", "subarea": "罗秀", "x": 72, "y": 65, "price": 3500.0, "type": "整租", "area": 40, "metro": "距罗秀路1公里", "platform": "贝壳", "contact": "贝壳App", "fee": "无", "rating": 4, "note": "中楼层步梯朝南，普通装修，有点像Studio，无服务费", "photos": [], "visited": false, "link": "https://sh.zu.ke.com/zufang/SH2150516767317819392.html"}];
   var selectedId = null, typeFilter = "all", sortBy = "price-asc";
   var pinsLayer = document.getElementById("pinsLayer");
   var listPane = document.getElementById("listPane");
@@ -150,12 +173,21 @@
     var html = '<div class="entry-card '+(expanded?"expanded selected":"")+'">';
     html += '<div class="entry-head" data-head="'+l.id+'">';
     html += '<div class="badge">'+escapeHtml(String(l.fileNo).padStart(2,"0"))+"</div>";
-    html += '<div class="entry-name">'+escapeHtml(l.name)+"</div>";
+    html += '<div class="entry-name-wrap"><div class="entry-name">'+escapeHtml(l.name)+"</div>";
+    if(l.visited) html += '<span class="visited-tag">✓ 已看房</span>';
+    html += "</div>";
     html += '<span class="type-tag '+typeClass+'">'+escapeHtml(l.type)+"</span>";
     html += '<div class="entry-meta"><div class="entry-price">¥'+escapeHtml(String(l.price))+'</div><div class="entry-fee">服务费 '+escapeHtml(l.fee||"无")+"</div></div></div>";
     if(expanded){
       html += '<div class="entry-body">';
-      if(l.photoUrl) html += '<img class="entry-photo" src="'+escapeHtml(l.photoUrl)+'" alt="'+escapeHtml(l.name)+'照片"/>';
+      // 多图缩略图
+      if(l.photos && l.photos.length){
+        html += '<div class="photo-grid">';
+        l.photos.forEach(function(url, idx){
+          html += '<img class="photo-thumb" src="'+escapeHtml(url)+'" alt="照片'+(idx+1)+'" data-photos="'+escapeHtml(JSON.stringify(l.photos))+'" data-idx="'+idx+'"/>';
+        });
+        html += "</div>";
+      }
       html += '<div class="entry-row"><span class="label">板块</span><span>'+escapeHtml(l.subarea||"-")+"</span></div>";
       html += '<div class="entry-row"><span class="label">面积</span><span>'+(l.area?escapeHtml(String(l.area))+"㎡":"-")+"</span></div>";
       html += '<div class="entry-row"><span class="label">地铁</span><span>'+escapeHtml(l.metro||"-")+"</span></div>";
@@ -169,6 +201,33 @@
     html += "</div>";
     return html;
   }
+
+  // 灯箱逻辑
+  var lbOverlay = document.getElementById("lbOverlay");
+  var lbImg     = document.getElementById("lbImg");
+  var lbPhotos  = [], lbIdx = 0;
+  function openLb(photos, idx){
+    lbPhotos = photos; lbIdx = idx;
+    lbImg.src = lbPhotos[lbIdx];
+    lbOverlay.classList.add("open");
+  }
+  document.getElementById("lbClose").addEventListener("click", function(){ lbOverlay.classList.remove("open"); });
+  lbOverlay.addEventListener("click", function(e){ if(e.target===lbOverlay) lbOverlay.classList.remove("open"); });
+  document.getElementById("lbPrev").addEventListener("click", function(){ lbIdx=(lbIdx-1+lbPhotos.length)%lbPhotos.length; lbImg.src=lbPhotos[lbIdx]; });
+  document.getElementById("lbNext").addEventListener("click", function(){ lbIdx=(lbIdx+1)%lbPhotos.length; lbImg.src=lbPhotos[lbIdx]; });
+  document.addEventListener("keydown", function(e){
+    if(!lbOverlay.classList.contains("open")) return;
+    if(e.key==="Escape") lbOverlay.classList.remove("open");
+    if(e.key==="ArrowLeft"){ lbIdx=(lbIdx-1+lbPhotos.length)%lbPhotos.length; lbImg.src=lbPhotos[lbIdx]; }
+    if(e.key==="ArrowRight"){ lbIdx=(lbIdx+1)%lbPhotos.length; lbImg.src=lbPhotos[lbIdx]; }
+  });
+  document.addEventListener("click", function(e){
+    if(e.target.classList.contains("photo-thumb")){
+      var photos = JSON.parse(e.target.dataset.photos);
+      var idx    = parseInt(e.target.dataset.idx, 10);
+      openLb(photos, idx);
+    }
+  });
   function renderList(){
     var filtered = getFiltered();
     if(filtered.length===0){
